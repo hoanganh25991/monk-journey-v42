@@ -9,7 +9,7 @@ const CACHE_KEY = CACHE_NAME + '-v' + CACHE_VERSION;
 
 
 // Total cache size in bytes and MB
-const TOTAL_CACHE_SIZE_BYTES = 6826065;
+const TOTAL_CACHE_SIZE_BYTES = 6822233;
 const TOTAL_CACHE_SIZE_MB = 6.51;
 
 // Assets to cache
@@ -236,7 +236,6 @@ const ASSETS_TO_CACHE = [
   'js/menu-system/settings-menu/GameplayTab.js',
   'js/menu-system/settings-menu/ItemPreviewTab.js',
   'js/menu-system/settings-menu/PerformanceTab.js',
-  'js/menu-system/settings-menu/ReleaseTab.js',
   'js/menu-system/settings-menu/SettingsTab.js',
   'js/menu-system/settings-menu/SkillPreview.js',
   'js/menu-system/settings-menu/SkillsPreviewTab.js',
@@ -550,7 +549,6 @@ const FILE_SIZES =   {
     "js/menu-system/settings-menu/EnemyPreviewTab.js": 13083,
     "js/menu-system/settings-menu/GameplayTab.js": 2608,
     "js/menu-system/settings-menu/PerformanceTab.js": 7216,
-    "js/menu-system/settings-menu/ReleaseTab.js": 3832,
     "js/menu-system/settings-menu/SettingsTab.js": 1400,
     "js/menu-system/settings-menu/SkillsPreviewTab.js": 9141,
     "js/menu-system/settings-menu/index.js": 533,
