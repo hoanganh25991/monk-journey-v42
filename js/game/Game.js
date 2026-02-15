@@ -295,6 +295,19 @@ export class Game {
         }
         // Handle window resize
         window.addEventListener('resize', () => this.onWindowResize());
+
+        // Handle fullscreen change so canvas is resized and fills the screen (no bottom whitespace)
+        const onFullscreenChange = () => {
+            window.isFullscreenChange = true;
+            requestAnimationFrame(() => {
+                this.adjustRendererSize();
+                setTimeout(() => { window.isFullscreenChange = false; }, 100);
+            });
+        };
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
+        document.addEventListener('MSFullscreenChange', onFullscreenChange);
         
         // Handle visibility change events
         document.addEventListener('visibilitychange', () => this.onVisibilityChange());
@@ -381,22 +394,35 @@ export class Game {
     }
     
     /**
-     * Adjust renderer size to match current window dimensions
+     * Adjust renderer size to match current window/viewport dimensions.
+     * When in fullscreen, uses the fullscreen element's size so the canvas fills the screen.
      */
     adjustRendererSize() {
         if (this.renderer && this.camera) {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            
+            let width, height;
+            const fullscreenEl = document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement;
+
+            if (fullscreenEl) {
+                // Use fullscreen element dimensions so canvas matches actual fullscreen size
+                width = fullscreenEl.clientWidth;
+                height = fullscreenEl.clientHeight;
+            } else {
+                width = window.innerWidth;
+                height = window.innerHeight;
+            }
+
             console.debug(`Adjusting renderer size to ${width}x${height}`);
-            
+
             // Update camera aspect ratio
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
-            
+
             // Update renderer size
             this.renderer.setSize(width, height, true);
-            
+
             // Update pixel ratio for high-DPI displays
             const pixelRatio = window.devicePixelRatio || 1;
             this.renderer.setPixelRatio(pixelRatio);
@@ -698,13 +724,7 @@ export class Game {
      * Handle window resize event
      */
     onWindowResize() {
-        // Check if this is triggered by a fullscreen change
-        if (window.isFullscreenChange) {
-            console.debug('Handling resize as part of fullscreen change');
-            return; // The fullscreen handlers will take care of resizing
-        }
-        
-        // For normal window resizing, adjust the renderer size
+        // Always adjust renderer size on resize (including when entering/exiting fullscreen)
         this.adjustRendererSize();
     }
 
