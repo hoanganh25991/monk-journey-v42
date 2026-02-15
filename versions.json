@@ -1,0 +1,28 @@
+{
+  "versions": [
+    {
+      "version": "v64",
+      "path": "/",
+      "label": "v64",
+      "description": "Latest version with all features"
+    },
+    {
+      "version": "v48",
+      "path": "./v48",
+      "label": "v48",
+      "description": "Map v3 - Portals"
+    },
+    {
+      "version": "v45",
+      "path": "./v45",
+      "label": "v45",
+      "description": "Map v2 - Structures"
+    },
+    {
+      "version": "v42",
+      "path": "./v42",
+      "label": "v42",
+      "description": "Map v1 - Basic"
+    }
+  ]
+}
