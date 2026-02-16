@@ -65,9 +65,14 @@ export class VirtualJoystickUI extends UIComponent {
      */
     setupJoystickEvents() {
         // Touch start event
+        // Use changedTouches (not touches[0]) - when holding skill on right, touches[0] is the
+        // skill finger; we need the touch that just landed on the joystick
         this.container.addEventListener('touchstart', (event) => {
             event.preventDefault();
-            this.handleJoystickStart(event.touches[0].clientX, event.touches[0].clientY);
+            if (event.changedTouches.length > 0) {
+                const touch = event.changedTouches[0];
+                this.handleJoystickStart(touch.clientX, touch.clientY);
+            }
         });
         
         // Mouse down event (for testing on desktop)
@@ -81,10 +86,12 @@ export class VirtualJoystickUI extends UIComponent {
         });
         
         // Touch move event
+        // Use targetTouches (not touches[0]) - ensures we use the touch on the joystick when holding skill
         this.container.addEventListener('touchmove', (event) => {
             event.preventDefault();
-            if (this.joystickState.active) {
-                this.handleJoystickMove(event.touches[0].clientX, event.touches[0].clientY);
+            if (this.joystickState.active && event.targetTouches.length > 0) {
+                const touch = event.targetTouches[0];
+                this.handleJoystickMove(touch.clientX, touch.clientY);
             }
         });
         
