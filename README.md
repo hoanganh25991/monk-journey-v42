@@ -62,9 +62,9 @@ Monk Journey is built using:
 
 Developed with passion by the Monk Journey team.
 
-## Google Play Store Listing
+## Google Play
 
-Use the text below when uploading Monk Journey - LITE to Google Play Console.
+[![Get it on Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=io.github.hoanganh25991.monkjourneyv42)
 
 ### Short description (max 80 characters)
 
