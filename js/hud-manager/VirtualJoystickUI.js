@@ -18,6 +18,7 @@ export class VirtualJoystickUI extends UIComponent {
         // Initialize joystick state
         this.joystickState = {
             active: false,
+            touchId: null,  // Track which touch owns the joystick (for multi-touch: joystick + skill)
             centerX: 0,
             centerY: 0,
             currentX: 0,
@@ -67,13 +68,15 @@ export class VirtualJoystickUI extends UIComponent {
         // Touch start event
         // Use changedTouches (not touches[0]) - when holding skill on right, touches[0] is the
         // skill finger; we need the touch that just landed on the joystick
+        // passive: false is REQUIRED on real Android - without it, preventDefault() is ignored
+        // and Chrome fires touchcancel ~200ms later, killing joystick movement
         this.container.addEventListener('touchstart', (event) => {
             event.preventDefault();
             if (event.changedTouches.length > 0) {
                 const touch = event.changedTouches[0];
-                this.handleJoystickStart(touch.clientX, touch.clientY);
+                this.handleJoystickStart(touch.clientX, touch.clientY, touch.identifier);
             }
-        });
+        }, { passive: false });
         
         // Mouse down event (for testing on desktop)
         this.container.addEventListener('mousedown', (event) => {
@@ -87,25 +90,32 @@ export class VirtualJoystickUI extends UIComponent {
         
         // Touch move event
         // Use targetTouches (not touches[0]) - ensures we use the touch on the joystick when holding skill
+        // passive: false required so preventDefault() works on real Android
         this.container.addEventListener('touchmove', (event) => {
             event.preventDefault();
             if (this.joystickState.active && event.targetTouches.length > 0) {
-                const touch = event.targetTouches[0];
-                this.handleJoystickMove(touch.clientX, touch.clientY);
+                const touch = this.findJoystickTouch(event.targetTouches);
+                if (touch) {
+                    this.handleJoystickMove(touch.clientX, touch.clientY);
+                }
             }
-        });
+        }, { passive: false });
         
-        // Touch end event
+        // Touch end event - only end if our tracked touch lifted
         this.container.addEventListener('touchend', (event) => {
             event.preventDefault();
-            this.handleJoystickEnd();
-        });
+            if (this.isJoystickTouchEnded(event.changedTouches)) {
+                this.handleJoystickEnd();
+            }
+        }, { passive: false });
         
         // Touch cancel event
         this.container.addEventListener('touchcancel', (event) => {
             event.preventDefault();
-            this.handleJoystickEnd();
-        });
+            if (this.isJoystickTouchEnded(event.changedTouches)) {
+                this.handleJoystickEnd();
+            }
+        }, { passive: false });
         
         // Mouse move handler (defined as property to allow removal)
         this.handleMouseMove = (event) => {
@@ -130,18 +140,44 @@ export class VirtualJoystickUI extends UIComponent {
      * Handle joystick start event
      * @param {number} clientX - X position of touch/mouse
      * @param {number} clientY - Y position of touch/mouse
+     * @param {number} [touchId] - Touch identifier (for multi-touch; null for mouse)
      */
-    handleJoystickStart(clientX, clientY) {
+    handleJoystickStart(clientX, clientY, touchId = null) {
         // Get joystick container position
         const rect = this.container.getBoundingClientRect();
         
         // Set joystick state
         this.joystickState.active = true;
+        this.joystickState.touchId = touchId;
         this.joystickState.centerX = rect.left + rect.width / 2;
         this.joystickState.centerY = rect.top + rect.height / 2;
         
         // Update joystick position
         this.handleJoystickMove(clientX, clientY);
+    }
+
+    /**
+     * Find our tracked touch in a TouchList (for multi-touch: joystick + skill)
+     * @param {TouchList} touchList - targetTouches or similar
+     * @returns {Touch|null}
+     */
+    findJoystickTouch(touchList) {
+        if (this.joystickState.touchId === null) {
+            return touchList[0] || null;
+        }
+        return Array.from(touchList).find(t => t.identifier === this.joystickState.touchId) || null;
+    }
+
+    /**
+     * Check if our tracked touch ended in changedTouches
+     * @param {TouchList} changedTouches
+     * @returns {boolean}
+     */
+    isJoystickTouchEnded(changedTouches) {
+        if (this.joystickState.touchId === null) {
+            return changedTouches.length > 0;
+        }
+        return Array.from(changedTouches).some(t => t.identifier === this.joystickState.touchId);
     }
     
     /**
@@ -194,6 +230,7 @@ export class VirtualJoystickUI extends UIComponent {
     handleJoystickEnd() {
         // Reset joystick state
         this.joystickState.active = false;
+        this.joystickState.touchId = null;
         this.joystickState.direction = { x: 0, y: 0 };
         
         // Reset joystick handle position
