@@ -22,3 +22,15 @@
     opacity: 0.8;
     transition: opacity 0.2s ease;
 }
+
+/* Compact minimap - smaller control buttons when auto-scaled small */
+#mini-map.minimap-compact #mini-map-controls button {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    margin-bottom: 3px;
+}
+
+#mini-map.minimap-compact #mini-map-center-btn {
+    font-size: 12px !important;
+}
