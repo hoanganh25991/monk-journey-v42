@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
     
     // Performance and quality settings
     QUALITY_LEVEL: 'monk_journey_quality_level',
+    MINIMAL_MODE: 'monk_journey_minimal_mode',  // Low-end tablet mode for 60 FPS
     ADAPTIVE_QUALITY: 'monk_journey_adaptive_quality',
     TARGET_FPS: 'monk_journey_target_fps',
     SHOW_PERFORMANCE_INFO: 'monk_journey_show_performance_info',

@@ -36,8 +36,9 @@ export class PerformanceManager {
         };
         this.qualityLevels = QUALITY_LEVELS;
         
-        // Load quality level from local storage or use 'ultra' as default
-        this.currentQuality = localStorage.getItem('monk_journey_quality_level') || 'ultra';
+        // Load quality: minimal mode overrides to 'minimal' for low-end tablets
+        const isMinimal = localStorage.getItem(STORAGE_KEYS.MINIMAL_MODE) === 'true';
+        this.currentQuality = isMinimal ? 'minimal' : (localStorage.getItem(STORAGE_KEYS.QUALITY_LEVEL) || 'ultra');
         this.stats = null;
         this.memoryDisplay = null;
         this.disposalQueue = []; // Queue for objects to be disposed

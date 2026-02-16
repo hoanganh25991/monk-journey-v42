@@ -4,7 +4,6 @@
  */
 
 import { UIComponent } from '../UIComponent.js';
-import { PerformanceTab } from './settings-menu/PerformanceTab.js';
 import { GameplayTab } from './settings-menu/GameplayTab.js';
 import { CharacterModelTab } from './settings-menu/CharacterModelTab.js';
 import { SkillsPreviewTab } from './settings-menu/SkillsPreviewTab.js';
@@ -93,8 +92,7 @@ export class SettingsMenu extends UIComponent {
      * @private
      */
     initializeTabComponents() {
-        // Create tab components
-        this.tabs.performance = new PerformanceTab(this.game, this);
+        // Create tab components (Game tab includes performance settings)
         this.tabs.game = new GameplayTab(this.game, this);
         this.tabs['model-preview'] = new CharacterModelTab(this.game, this);
         this.tabs['skills-preview'] = new SkillsPreviewTab(this.game, this);

@@ -7,53 +7,53 @@ export class SceneOptimizer {
     /**
      * Apply optimizations to a Three.js scene
      * @param {THREE.Scene} scene - The scene to optimize
+     * @param {string} qualityLevel - The quality level ('ultra', 'high', 'medium', 'low', or 'minimal')
      */
-    static optimizeScene(scene) {
-        // Apply scene-wide optimizations
+    static optimizeScene(scene, qualityLevel = 'ultra') {
+        const isMinimal = qualityLevel === 'minimal';
+
         scene.traverse(object => {
             if (object.isMesh) {
-                // Enable frustum culling
                 object.frustumCulled = true;
-                
-                // Optimize shadows
-                if (object.castShadow) {
+
+                // Disable shadows for minimal (biggest GPU win)
+                if (isMinimal) {
+                    object.castShadow = false;
+                    object.receiveShadow = false;
+                } else if (object.castShadow) {
                     object.castShadow = true;
-                    // Only update shadow when object moves
                     object.matrixAutoUpdate = true;
                 }
-                
-                // Optimize materials
+
                 if (object.material) {
                     const materials = Array.isArray(object.material) ? object.material : [object.material];
-                    
                     materials.forEach(material => {
-                        // Set precision based on device capability
-                        material.precision = 'mediump';
-                        
-                        // Only use fog if scene has fog
+                        material.precision = isMinimal ? 'lowp' : 'mediump';
                         material.fog = !!scene.fog;
-                        
-                        // Optimize textures if present
                         if (material.map) {
                             material.map.anisotropy = 1;
+                            if (isMinimal) {
+                                material.map.minFilter = THREE.NearestFilter;
+                                material.map.magFilter = THREE.NearestFilter;
+                                material.map.generateMipmaps = false;
+                            }
+                        }
+                        if (isMinimal) {
+                            material.flatShading = true;
                         }
                     });
                 }
             }
-            
-            // Optimize lights
+
             if (object.isLight) {
                 if (object.shadow) {
-                    // Set initial shadow map size based on performance level
-                    object.shadow.mapSize.width = 1024;
-                    object.shadow.mapSize.height = 1024;
-                    
-                    // Optimize shadow camera frustum
-                    if (object.shadow.camera) {
-                        // Tighten shadow camera frustum to scene size
-                        const camera = object.shadow.camera;
-                        if (camera.isOrthographicCamera) {
-                            // Adjust based on scene size
+                    if (isMinimal) {
+                        object.castShadow = false;
+                    } else {
+                        object.shadow.mapSize.width = 1024;
+                        object.shadow.mapSize.height = 1024;
+                        if (object.shadow.camera && object.shadow.camera.isOrthographicCamera) {
+                            const camera = object.shadow.camera;
                             const size = 20;
                             camera.left = -size;
                             camera.right = size;
@@ -65,8 +65,8 @@ export class SceneOptimizer {
                 }
             }
         });
-        
-        console.debug("Scene optimizations applied");
+
+        console.debug(`Scene optimizations applied for ${qualityLevel} quality`);
     }
     
     /**

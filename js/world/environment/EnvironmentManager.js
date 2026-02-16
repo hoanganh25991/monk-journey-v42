@@ -5,15 +5,18 @@ import { Bush } from './Bush.js';
 import { Flower } from './Flower.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 import { ENVIRONMENT_CONFIG } from '../../config/environment.js';
+import { getPerformanceProfile } from '../../config/performance-profile.js';
 
 /**
  * Manages environment objects like trees, rocks, bushes, etc.
  */
 export class EnvironmentManager {
-    constructor(scene, worldManager, game = null) {
+    constructor(scene, worldManager, game = null, isMinimalMode = false) {
         this.scene = scene;
         this.worldManager = worldManager;
         this.game = game;
+        this.isMinimalMode = isMinimalMode;
+        this.profile = getPerformanceProfile(isMinimalMode);
         
         // Environment object collections
         this.environmentObjects = {}; // Store environment objects by chunk key
@@ -67,8 +70,9 @@ export class EnvironmentManager {
         // Track which chunks should be visible
         const newVisibleChunks = {};
         
-        // Adjust view distance based on performance
-        const viewDistance = Math.max(1, Math.floor(3 * drawDistanceMultiplier));
+        // Adjust view distance: minimal = 2, normal = 3
+        const baseViewDistance = this.isMinimalMode ? this.profile.viewDistance : 3;
+        const viewDistance = Math.max(1, Math.floor(baseViewDistance * drawDistanceMultiplier));
         
         // Generate or update chunks in render distance
         for (let x = centerX - viewDistance; x <= centerX + viewDistance; x++) {
@@ -151,10 +155,10 @@ export class EnvironmentManager {
             const random = RandomGenerator.seededRandom(`${chunkX},${chunkZ}`);
             
             // Generate environment objects for each type
+            const densityMultiplier = this.profile.environmentDensity;
             for (const objectType of this.environmentObjectTypes) {
-                // Determine number of objects to generate based on density
                 const density = this.environmentObjectDensity[objectType];
-                const numObjects = Math.floor(this.chunkSize * this.chunkSize * density);
+                const numObjects = Math.floor(this.chunkSize * this.chunkSize * density * densityMultiplier);
                 
                 for (let i = 0; i < numObjects; i++) {
                     // Random position within the chunk

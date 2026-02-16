@@ -12,17 +12,19 @@ import { TeleportManager } from './teleport/TeleportManager.js';
  * Main World Manager class that coordinates all world-related systems
  */
 export class WorldManager {
-    constructor(scene, loadingManager, game) {
+    constructor(scene, loadingManager, game, qualityLevel = 'ultra', isMinimalMode = false) {
         this.scene = scene;
         this.loadingManager = loadingManager;
         this.game = game;
+        this.qualityLevel = qualityLevel;
+        this.isMinimalMode = isMinimalMode;
         
-        // Initialize managers
+        // Initialize managers (pass minimal mode for performance optimizations)
         this.lightingManager = new LightingManager(scene);
         this.fogManager = new FogManager(scene, this, game);
-        this.terrainManager = new TerrainManager(scene, this, game);
-        this.structureManager = new StructureManager(scene, this, game);
-        this.environmentManager = new EnvironmentManager(scene, this, game);
+        this.terrainManager = new TerrainManager(scene, this, game, isMinimalMode);
+        this.structureManager = new StructureManager(scene, this, game, isMinimalMode);
+        this.environmentManager = new EnvironmentManager(scene, this, game, isMinimalMode);
         this.interactiveManager = new InteractiveObjectManager(scene, this, game);
         this.zoneManager = new ZoneManager(scene, this, game);
         this.teleportManager = new TeleportManager(scene, this, game);

@@ -8,15 +8,18 @@ import { Bridge } from './Bridge.js';
 import { Village } from './Village.js';
 import { RandomGenerator } from '../utils/RandomGenerator.js';
 import { STRUCTURE_CONFIG } from '../../config/structure.js';
+import { getPerformanceProfile } from '../../config/performance-profile.js';
 
 /**
  * Manages structure generation and placement
  */
 export class StructureManager {
-    constructor(scene, worldManager, game = null) {
+    constructor(scene, worldManager, game = null, isMinimalMode = false) {
         this.scene = scene;
         this.worldManager = worldManager;
         this.game = game;
+        this.isMinimalMode = isMinimalMode;
+        this.profile = getPerformanceProfile(isMinimalMode);
         
         // Structure collections
         this.structures = [];
@@ -84,7 +87,7 @@ export class StructureManager {
         const chunkCenterZ = worldZ + terrainChunkSize / 2;
         const zoneType = this.getZoneTypeAt(chunkCenterX, chunkCenterZ);
         
-        // Adjust structure density based on zone type
+        // Adjust structure density based on zone type and performance profile
         let densityMultiplier = 1.0;
         if (zoneType === 'Forest') densityMultiplier = 1.2;
         if (zoneType === 'Desert') densityMultiplier = 0.7;
@@ -92,6 +95,7 @@ export class StructureManager {
         if (zoneType === 'Ruins') densityMultiplier = 1.5;
         if (zoneType === 'Dark Sanctum') densityMultiplier = 0.8;
         if (zoneType === 'Terrant') densityMultiplier = 1.0;
+        densityMultiplier *= this.profile.structureDensity;
         
         // IMPROVED: Better distribution of Dark Sanctums
         // Modified to make them more common and better distributed

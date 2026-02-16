@@ -2,27 +2,28 @@ import * as THREE from 'three';
 import { TextureGenerator } from '../utils/TextureGenerator.js';
 import { ZONE_COLORS } from '../../config/colors.js';
 import { TERRAIN_CONFIG } from '../../config/terrain.js';
+import { getPerformanceProfile } from '../../config/performance-profile.js';
 
 /**
  * Manages terrain generation and rendering
  */
 export class TerrainManager {
-    constructor(scene, worldManager, game = null) {
+    constructor(scene, worldManager, game = null, isMinimalMode = false) {
         this.scene = scene;
         this.worldManager = worldManager;
         this.game = game;
-        
+        this.isMinimalMode = isMinimalMode;
+        this.profile = getPerformanceProfile(isMinimalMode);
+
         // Terrain properties from config
         this.terrainSize = TERRAIN_CONFIG.size;
         this.terrainResolution = TERRAIN_CONFIG.resolution;
         this.terrainHeight = TERRAIN_CONFIG.height;
-        
-        // For terrain chunks from config
+
+        // For terrain chunks: use profile for minimal mode
         this.terrainChunkSize = TERRAIN_CONFIG.chunkSize;
-        this.terrainChunkViewDistance = TERRAIN_CONFIG.chunkViewDistance;
-        
-        // For terrain buffering (pre-rendering) from config
-        this.terrainBufferDistance = TERRAIN_CONFIG.bufferDistance;
+        this.terrainChunkViewDistance = this.profile.viewDistance;
+        this.terrainBufferDistance = this.profile.bufferDistance;
 
         this.terrainBuffer = {}; // Store pre-generated terrain chunks that aren't yet visible
         this.terrainGenerationQueue = []; // Queue for prioritized terrain generation
@@ -533,9 +534,10 @@ export class TerrainManager {
         const terrain = new THREE.Mesh(template.geometry.clone(), template.material.clone());
         terrain.rotation.x = -Math.PI / 2;
         
-        // CRITICAL FIX: Ensure both receiveShadow and castShadow are set to true
-        terrain.receiveShadow = true;
-        terrain.castShadow = true;
+        // Shadows: disable for minimal mode (big GPU win)
+        const shadowsOn = !this.isMinimalMode;
+        terrain.receiveShadow = shadowsOn;
+        terrain.castShadow = shadowsOn;
         
         // Apply terrain coloring with variations based on zone type
         this.colorTerrainUniform(terrain, zoneType);
@@ -573,12 +575,13 @@ export class TerrainManager {
     createNewTerrainChunk(chunkX, chunkZ) {
         const chunkKey = `${chunkX},${chunkZ}`;
         
-        // Create the terrain mesh using the unified method
+        // Use profile resolution: minimal = 8, normal = 16
+        const chunkResolution = this.isMinimalMode ? this.profile.terrainLod.farResolution : 16;
         const terrain = this.createTerrainMesh(
             chunkX,
             chunkZ,
             this.terrainChunkSize,
-            16 // Lower resolution for better performance
+            chunkResolution
         );
         
         // Store the terrain chunk
@@ -671,9 +674,8 @@ export class TerrainManager {
         // Store in buffer but don't create actual geometry yet
         this.terrainBuffer[chunkKey] = placeholder;
         
-        // Pre-fetch the terrain template for this zone type to ensure it's cached
-        // This helps reduce stuttering when the chunk becomes visible
-        this.getOrCreateTerrainTemplate(zoneType, this.terrainChunkSize, 16);
+        const chunkRes = this.isMinimalMode ? this.profile.terrainLod.farResolution : 16;
+        this.getOrCreateTerrainTemplate(zoneType, this.terrainChunkSize, chunkRes);
         
         // Notify structure manager to pre-generate structures for this chunk
         if (this.worldManager && this.worldManager.structureManager) {
@@ -704,20 +706,22 @@ export class TerrainManager {
         
         // If no saved data, create a new chunk using the template system
         // Get the terrain template for this zone type
+        const chunkRes = this.isMinimalMode ? this.profile.terrainLod.farResolution : 16;
         const template = this.getOrCreateTerrainTemplate(
-            zoneTypeName, 
-            this.terrainChunkSize, 
-            16
+            zoneTypeName,
+            this.terrainChunkSize,
+            chunkRes
         );
         
         // Create terrain mesh using the template
         const terrain = new THREE.Mesh(template.geometry.clone(), template.material.clone());
         terrain.rotation.x = -Math.PI / 2;
         
-        // Set shadows
-        terrain.receiveShadow = true;
-        terrain.castShadow = true;
-        
+        // Shadows: disable for minimal mode
+        const shadowsOn = !this.isMinimalMode;
+        terrain.receiveShadow = shadowsOn;
+        terrain.castShadow = shadowsOn;
+
         // Apply terrain coloring with variations based on zone type
         this.colorTerrainUniform(terrain, zoneTypeName);
         
@@ -746,8 +750,8 @@ export class TerrainManager {
      * @param {number} centerZ - Center Z chunk coordinate
      */
     queueTerrainChunksForBuffering(centerX, centerZ) {
-        // Limit the queue size to prevent memory issues
-        const MAX_QUEUE_SIZE = 16; // Maximum number of chunks in the queue (reduced from 24 to 16)
+        // Limit the queue size: minimal = smaller queue
+        const MAX_QUEUE_SIZE = this.isMinimalMode ? 8 : 16;
         if (this.terrainGenerationQueue.length >= MAX_QUEUE_SIZE) {
             console.debug(`Terrain generation queue full (${this.terrainGenerationQueue.length}/${MAX_QUEUE_SIZE}), skipping new chunks`);
             return;
@@ -758,7 +762,7 @@ export class TerrainManager {
         
         // Track how many chunks we've added to the queue
         let chunksAdded = 0;
-        const MAX_CHUNKS_PER_UPDATE = 8; // Maximum chunks to add per update
+        const MAX_CHUNKS_PER_UPDATE = this.isMinimalMode ? 4 : 8;
         
         // Calculate buffer area (larger than view distance)
         for (let x = centerX - this.terrainBufferDistance; x <= centerX + this.terrainBufferDistance; x++) {
@@ -839,7 +843,7 @@ export class TerrainManager {
         // Process multiple chunks per frame when possible
         // Start with a timestamp to measure how long we've been processing
         const startTime = performance.now();
-        const maxProcessingTime = 3; // Max milliseconds to spend processing per frame (reduced from 5 to 3)
+        const maxProcessingTime = this.isMinimalMode ? 2 : 3;
         
         // Process chunks until we hit the time limit or empty the queue
         while (this.terrainGenerationQueue.length > 0 && 

@@ -131,9 +131,10 @@ export class Game {
             // Update loading progress
             this.updateLoadingProgress(5, 'Initializing renderer...', 'Setting up WebGL');
             
-            // Initialize renderer with quality settings from localStorage or use 'ultra' as default
-            const qualityLevel = localStorage.getItem('monk_journey_quality_level') || 'ultra';
-            this.renderer = this.createRenderer(qualityLevel);
+            // Initialize renderer: minimal mode = low-end tablet for 60 FPS
+            this.isMinimalMode = localStorage.getItem(STORAGE_KEYS.MINIMAL_MODE) === 'true';
+            this.qualityLevel = this.isMinimalMode ? 'minimal' : 'ultra';
+            this.renderer = this.createRenderer(this.qualityLevel);
             
             this.updateLoadingProgress(10, 'Creating game world...', 'Setting up scene');
             
@@ -168,8 +169,8 @@ export class Game {
             
             this.updateLoadingProgress(20, 'Building world...', 'Generating terrain and environment');
             
-            // Initialize world
-            this.world = new WorldManager(this.scene, this.loadingManager, this);
+            // Initialize world (pass quality for terrain/env/structure optimizations)
+            this.world = new WorldManager(this.scene, this.loadingManager, this, this.qualityLevel, this.isMinimalMode);
             await this.world.init();
             
             this.updateLoadingProgress(40, 'Loading character...', 'Preparing player model and animations');
@@ -242,8 +243,8 @@ export class Game {
 
             this.updateLoadingProgress(100, 'Game ready!', 'Initialization complete');
             
-            // Apply performance optimizations to the scene
-            SceneOptimizer.optimizeScene(this.scene);
+            // Apply performance optimizations to the scene (minimal = disable shadows, reduce quality)
+            SceneOptimizer.optimizeScene(this.scene, this.qualityLevel);
             
             // Set up event listeners
             this.setupEventListeners();

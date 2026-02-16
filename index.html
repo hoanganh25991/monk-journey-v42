@@ -454,14 +454,13 @@
             <!-- Top Row with Tabs -->
             <div class="top-tabs-row">
                 <div class="top-tabs">
-                    <button id="tab-game" class="tab-icon" title="Game">🎮</button>
+                    <button id="tab-game" class="tab-icon active" title="Game">🎮</button>
                     <button id="tab-controls" class="tab-icon" title="Controls">🎛️</button>
                     <button id="tab-audio" class="tab-icon" title="Audio">🔊</button>
                     <button id="tab-model-preview" class="tab-icon" title="Model Preview">👤</button>
                     <button id="tab-skills-preview" class="tab-icon" title="Skills Preview">✨</button>
                     <button id="tab-enemy-preview" class="tab-icon" title="Enemy Preview">👹</button>
                     <button id="tab-item-preview" class="tab-icon" title="Item Preview">🎁</button>
-                    <button id="tab-performance" class="tab-icon active" title="Performance">⚡</button>
                 </div>
             </div>
             
@@ -497,7 +496,32 @@
                             <button id="new-game-button" class="settings-button">New Game</button>
                             <span class="settings-description">Start a new game (current progress will be lost)</span>
                         </div>
-                                            </div>
+                        <h3>Performance</h3>
+                        <div id="minimal-mode-container" class="setting-item">
+                            <label for="minimal-mode-checkbox" class="settings-label">Low-end tablet mode: </label>
+                            <input type="checkbox" id="minimal-mode-checkbox" class="settings-checkbox">
+                            <span class="settings-description">Enable for smooth 60 FPS on weak tablets (reduces quality)</span>
+                        </div>
+                        <div id="fps-container" class="setting-item">
+                            <label for="fps-slider" class="settings-label">Target FPS: </label>
+                            <input type="range" id="fps-slider" class="settings-slider" min="30" max="120" step="5" value="60">
+                            <span id="fps-value" class="settings-value">60 FPS</span>
+                        </div>
+                        <div id="show-performance-info-container" class="setting-item">
+                            <label for="show-performance-info-checkbox" class="settings-label">Show Performance Info (FPS, GPU, Quality): </label>
+                            <input type="checkbox" id="show-performance-info-checkbox" class="settings-checkbox" checked>
+                        </div>
+                        <div id="log-enabled-container" class="setting-item">
+                            <label for="log-enabled-checkbox" class="settings-label">Enable Console Logs: </label>
+                            <input type="checkbox" id="log-enabled-checkbox" class="settings-checkbox">
+                            <span class="settings-description">Disable for better performance (requires page reload)</span>
+                        </div>
+                        <div id="debug-mode-container" class="setting-item">
+                            <label for="debug-mode-checkbox" class="settings-label">Debug Mode: </label>
+                            <input type="checkbox" id="debug-mode-checkbox" class="settings-checkbox">
+                            <span class="settings-description">Enable for local development and testing</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Controls Settings Tab -->
@@ -765,36 +789,6 @@
                                     <!-- Enemy details will be populated dynamically -->
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Settings Tab -->
-                <div id="performance-tab" class="tab-content">
-                    <h2 id="performance-title">Performance Settings</h2>
-                    <div id="performance-container" class="settings-section">
-                        <div id="quality-container" class="setting-item">
-                            <label for="quality-select" class="settings-label">Quality Preset: </label>
-                            <select id="quality-select" class="settings-select"></select>
-                        </div>
-                        <div id="fps-container" class="setting-item">
-                            <label for="fps-slider" class="settings-label">Target FPS: </label>
-                            <input type="range" id="fps-slider" class="settings-slider" min="30" max="120" step="5" value="60">
-                            <span id="fps-value" class="settings-value">60 FPS</span>
-                        </div>
-                        <div id="show-performance-info-container" class="setting-item">
-                            <label for="show-performance-info-checkbox" class="settings-label">Show Performance Info (FPS, GPU, Quality): </label>
-                            <input type="checkbox" id="show-performance-info-checkbox" class="settings-checkbox" checked>
-                        </div>
-                        <div id="log-enabled-container" class="setting-item">
-                            <label for="log-enabled-checkbox" class="settings-label">Enable Console Logs: </label>
-                            <input type="checkbox" id="log-enabled-checkbox" class="settings-checkbox">
-                            <span class="settings-description">Disable for better performance (requires page reload)</span>
-                        </div>
-                        <div id="debug-mode-container" class="setting-item">
-                            <label for="debug-mode-checkbox" class="settings-label">Debug Mode: </label>
-                            <input type="checkbox" id="debug-mode-checkbox" class="settings-checkbox">
-                            <span class="settings-description">Enable for local development and testing</span>
                         </div>
                     </div>
                 </div>

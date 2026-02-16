@@ -26,7 +26,15 @@ export class GameplayTab extends SettingsTab {
         
         // New Game button
         this.newGameButton = document.getElementById('new-game-button');
-        
+
+        // Performance settings (merged from PerformanceTab)
+        this.minimalModeCheckbox = document.getElementById('minimal-mode-checkbox');
+        this.fpsSlider = document.getElementById('fps-slider');
+        this.fpsValue = document.getElementById('fps-value');
+        this.showPerformanceInfoCheckbox = document.getElementById('show-performance-info-checkbox');
+        this.debugModeCheckbox = document.getElementById('debug-mode-checkbox');
+        this.logEnabledCheckbox = document.getElementById('log-enabled-checkbox');
+
         this.init();
     }
     
@@ -36,8 +44,71 @@ export class GameplayTab extends SettingsTab {
      */
     init() {
         this.initializeDifficultySettings();
-        
+        this.initializePerformanceSettings();
         return true;
+    }
+
+    /**
+     * Initialize performance settings (merged from PerformanceTab)
+     * @private
+     */
+    initializePerformanceSettings() {
+        if (this.minimalModeCheckbox) {
+            const isMinimal = localStorage.getItem(STORAGE_KEYS.MINIMAL_MODE) === 'true';
+            this.minimalModeCheckbox.checked = isMinimal;
+            this.minimalModeCheckbox.addEventListener('change', () => {
+                const isMinimal = this.minimalModeCheckbox.checked;
+                localStorage.setItem(STORAGE_KEYS.MINIMAL_MODE, isMinimal.toString());
+                localStorage.setItem(STORAGE_KEYS.QUALITY_LEVEL, isMinimal ? 'minimal' : 'ultra');
+                if (this.game && this.game.performanceManager) {
+                    this.game.performanceManager.applyQualitySettings(isMinimal ? 'minimal' : 'ultra');
+                    if (this.game.hudManager && this.game.hudManager.showNotification) {
+                        this.game.hudManager.showNotification(
+                            isMinimal ? 'Low-end tablet mode enabled — restart game for full effect' : 'Low-end tablet mode disabled — restart game for full effect',
+                            3000
+                        );
+                    }
+                }
+            });
+        }
+        if (this.fpsSlider && this.fpsValue) {
+            const targetFPS = parseInt(localStorage.getItem(STORAGE_KEYS.TARGET_FPS)) || 60;
+            this.fpsSlider.value = targetFPS;
+            this.fpsValue.textContent = targetFPS;
+            this.fpsSlider.addEventListener('input', () => {
+                const value = parseInt(this.fpsSlider.value);
+                this.fpsValue.textContent = value;
+                localStorage.setItem(STORAGE_KEYS.TARGET_FPS, value);
+                if (this.game && this.game.performanceManager) {
+                    this.game.performanceManager.setTargetFPS(value);
+                }
+            });
+        }
+        if (this.showPerformanceInfoCheckbox) {
+            const showPerformanceInfo = localStorage.getItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO) === 'true';
+            this.showPerformanceInfoCheckbox.checked = showPerformanceInfo;
+            this.showPerformanceInfoCheckbox.addEventListener('change', () => {
+                localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
+                if (this.game && this.game.performanceManager) {
+                    this.game.performanceManager.applyPerformanceInfoVisibility();
+                }
+            });
+        }
+        if (this.debugModeCheckbox) {
+            const debugMode = localStorage.getItem(STORAGE_KEYS.DEBUG_MODE) === 'true';
+            this.debugModeCheckbox.checked = debugMode;
+            this.debugModeCheckbox.addEventListener('change', () => {
+                localStorage.setItem(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked);
+                if (this.game) this.game.debugMode = this.debugModeCheckbox.checked;
+            });
+        }
+        if (this.logEnabledCheckbox) {
+            const logEnabled = localStorage.getItem(STORAGE_KEYS.LOG_ENABLED) === 'true';
+            this.logEnabledCheckbox.checked = logEnabled;
+            this.logEnabledCheckbox.addEventListener('change', () => {
+                localStorage.setItem(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked);
+            });
+        }
     }
     
     /**
@@ -205,6 +276,15 @@ export class GameplayTab extends SettingsTab {
         if (this.cameraZoomSlider) {
             localStorage.setItem(STORAGE_KEYS.CAMERA_ZOOM, this.cameraZoomSlider.value);
         }
+        if (this.minimalModeCheckbox) {
+            const isMinimal = this.minimalModeCheckbox.checked;
+            localStorage.setItem(STORAGE_KEYS.MINIMAL_MODE, isMinimal.toString());
+            localStorage.setItem(STORAGE_KEYS.QUALITY_LEVEL, isMinimal ? 'minimal' : 'ultra');
+        }
+        if (this.fpsSlider) localStorage.setItem(STORAGE_KEYS.TARGET_FPS, this.fpsSlider.value);
+        if (this.showPerformanceInfoCheckbox) localStorage.setItem(STORAGE_KEYS.SHOW_PERFORMANCE_INFO, this.showPerformanceInfoCheckbox.checked.toString());
+        if (this.debugModeCheckbox) localStorage.setItem(STORAGE_KEYS.DEBUG_MODE, this.debugModeCheckbox.checked);
+        if (this.logEnabledCheckbox) localStorage.setItem(STORAGE_KEYS.LOG_ENABLED, this.logEnabledCheckbox.checked);
     }
     
     /**
@@ -221,14 +301,17 @@ export class GameplayTab extends SettingsTab {
         }
         
         if (this.cameraZoomSlider) {
-            this.cameraZoomSlider.value = 20; // Default camera distance
-            
-            // Update the display value
-            if (this.cameraZoomValue) {
-                this.cameraZoomValue.textContent = 20;
-            }
+            this.cameraZoomSlider.value = 20;
+            if (this.cameraZoomValue) this.cameraZoomValue.textContent = 20;
         }
-        
+        if (this.minimalModeCheckbox) this.minimalModeCheckbox.checked = false;
+        if (this.fpsSlider && this.fpsValue) {
+            this.fpsSlider.value = 60;
+            this.fpsValue.textContent = 60;
+        }
+        if (this.showPerformanceInfoCheckbox) this.showPerformanceInfoCheckbox.checked = false;
+        if (this.debugModeCheckbox) this.debugModeCheckbox.checked = false;
+        if (this.logEnabledCheckbox) this.logEnabledCheckbox.checked = false;
         this.saveSettings();
     }
 }
